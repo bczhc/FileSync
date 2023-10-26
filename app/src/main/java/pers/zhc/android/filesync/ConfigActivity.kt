@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.PopupMenu
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -22,7 +23,17 @@ class ConfigActivity : AppCompatActivity() {
 
         val syncDirs = mutableListOf<SyncDir>()
 
-        val listAdapter = ListAdapter(syncDirs)
+        val listAdapter = ListAdapter(syncDirs, onLongClick = { self, view, position ->
+            PopupMenu(this, view).apply {
+                inflate(R.menu.popup_menu_delete)
+                setOnMenuItemClickListener {
+                    if (it.itemId != R.id.delete) return@setOnMenuItemClickListener false
+                    self.notifyItemRemoved(position)
+                    syncDirs.removeAt(position)
+                    true
+                }
+            }.show()
+        })
         bindings.recyclerView.apply {
             layoutManager = LinearLayoutManager(this@ConfigActivity)
             adapter = listAdapter
@@ -44,7 +55,10 @@ class ConfigActivity : AppCompatActivity() {
         }
     }
 
-    class ListAdapter(private val data: MutableList<SyncDir>): RecyclerView.Adapter<ListAdapter.ViewHolder>() {
+    class ListAdapter(
+        private val data: MutableList<SyncDir>,
+        private val onLongClick: (self: ListAdapter, view: View, position: Int) -> Unit
+    ) : RecyclerView.Adapter<ListAdapter.ViewHolder>() {
         class ViewHolder(bindings: ListItemDirectoryBinding) : RecyclerView.ViewHolder(bindings.root) {
             val textView = bindings.textView
         }
@@ -56,6 +70,10 @@ class ConfigActivity : AppCompatActivity() {
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             holder.textView.text = data[position].path.path
+            holder.textView.setOnLongClickListener {
+                onLongClick(this, holder.textView, holder.layoutPosition)
+                true
+            }
         }
 
         override fun getItemCount(): Int {
