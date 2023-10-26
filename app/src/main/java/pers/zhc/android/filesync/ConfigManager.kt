@@ -1,27 +1,41 @@
 package pers.zhc.android.filesync
 
 import pers.zhc.android.filesync.MyApplication.Companion.GSON
+import pers.zhc.android.filesync.utils.assertCreateDir
+import pers.zhc.android.filesync.utils.assertCreateFile
 import java.io.File
-import java.lang.RuntimeException
 
 object ConfigManager {
     var savedDirPaths: List<SyncDir>
         get() {
             return runCatching {
-                GSON.fromJson(configFile.readText(), Array<SyncDir>::class.java)!!.toList()
+                GSON.fromJson(configFiles.dirPaths.readText(), Array<SyncDir>::class.java)!!.toList()
             }.getOrElse { emptyList() }
         }
         set(value) {
-            configFile.writeText(GSON.toJson(value.toTypedArray()))
+            configFiles.dirPaths.writeText(GSON.toJson(value.toTypedArray()))
         }
 
-    private val configFile by lazy {
-        File(MyApplication.appContext.filesDir, "config.json").also {
-            if (!it.exists()) {
-                if (!it.createNewFile()) {
-                    throw RuntimeException("File creation failed")
-                }
-            }
+    var savedNetworkDestination: String
+        get() {
+            return runCatching {
+                GSON.fromJson(configFiles.networkDestination.readText(), String::class.java)!!
+            }.getOrElse { "" }
         }
+        set(value) {
+            configFiles.networkDestination.writeText(GSON.toJson(value))
+        }
+
+    private val configFiles = object {
+        private fun createAndGet(name: String): File {
+            val configsDir = File(MyApplication.appContext.filesDir, "configs").also {
+                it.assertCreateDir()
+            }
+
+            return File(configsDir, name).also { it.assertCreateFile() }
+        }
+
+        val networkDestination by lazy { createAndGet("network-destination") }
+        val dirPaths by lazy { createAndGet("dir-paths") }
     }
 }
