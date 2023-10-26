@@ -1,11 +1,15 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
+<resources>
+
     <style name="Theme.FileSync" parent="Theme.Material3.DayNight">
+        <item name="colorPrimary">#039BE5</item>
     </style>
+
     <style name="Theme.FileSync.NoActionBar">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
     </style>
-    <style name="Theme.FileSync.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
-    <style name="Theme.FileSync.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+
+    <style name="Theme.FileSync.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar"/>
+
+    <style name="Theme.FileSync.PopupOverlay" parent="ThemeOverlay.AppCompat.Light"/>
 </resources>
