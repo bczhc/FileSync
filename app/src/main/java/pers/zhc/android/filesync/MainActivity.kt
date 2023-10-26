@@ -2,6 +2,7 @@ package pers.zhc.android.filesync
 
 import android.content.Intent
 import android.os.Bundle
+import android.text.method.ReplacementTransformationMethod
 import android.view.Menu
 import android.view.MenuItem
 import androidx.activity.result.contract.ActivityResultContracts
@@ -28,7 +29,7 @@ class MainActivity : AppCompatActivity() {
 
         val logET = bindings.logEt
         val appendLog = { line: String ->
-            logET.append(line)
+            logET.append(JNI.joinWordJoiner(line))
             logET.append("\n")
         }
 

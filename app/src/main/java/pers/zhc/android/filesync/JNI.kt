@@ -11,4 +11,7 @@ object JNI {
 
     @JvmStatic
     external fun send(networkDest: String, dirs: Array<String>, callback: Callback)
+
+    @JvmStatic
+    external fun joinWordJoiner(s: String): String
 }
