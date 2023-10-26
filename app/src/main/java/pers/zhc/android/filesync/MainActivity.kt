@@ -2,7 +2,6 @@ package pers.zhc.android.filesync
 
 import android.content.Intent
 import android.os.Bundle
-import android.text.method.ReplacementTransformationMethod
 import android.view.Menu
 import android.view.MenuItem
 import androidx.activity.result.contract.ActivityResultContracts
@@ -36,13 +35,15 @@ class MainActivity : AppCompatActivity() {
         bindings.syncBtn.setOnClickListener {
             logET.text.clear()
 
-            JNI.send(ConfigManager.savedNetworkDestination,
-                ConfigManager.savedDirPaths.map { it.path.path }.toTypedArray(),
-                object : JNI.Callback {
-                    override fun call(path: String) {
-                        appendLog(path)
-                    }
-                })
+            for (dir in ConfigManager.savedDirPaths) {
+                JNI.send(ConfigManager.savedNetworkDestination,
+                    dir.path.path,
+                    object : JNI.Callback {
+                        override fun call(path: String) {
+                            appendLog(path)
+                        }
+                    })
+            }
         }
     }
 

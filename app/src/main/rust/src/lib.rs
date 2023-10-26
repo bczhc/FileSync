@@ -1,10 +1,17 @@
 #![feature(try_blocks)]
 #![feature(const_char_from_u32_unchecked)]
 
-use std::fs;
+use std::io;
+use std::io::{Cursor, Read, Write};
+use std::net::{SocketAddr, TcpStream};
 use std::ptr::null_mut;
 
-use jni::objects::{JClass, JObject, JObjectArray, JString, JValueGen};
+use adb_sync::transfer::tcp::{Message, STREAM_MAGIC};
+use adb_sync::transfer::{write_send_list_to_stream, Stream};
+use adb_sync::{bincode_deserialize_compress, bincode_serialize_compress, index_dir};
+use anyhow::anyhow;
+use byteorder::{ReadBytesExt, WriteBytesExt, LE};
+use jni::objects::{JClass, JObject, JString, JValue};
 use jni::sys::{jobject, jstring};
 use jni::JNIEnv;
 
@@ -14,33 +21,82 @@ pub extern "system" fn Java_pers_zhc_android_filesync_JNI_send(
     mut env: JNIEnv,
     _: JClass,
     network_dest: JString,
-    dirs_jobj: JObjectArray,
+    dir: JString,
     callback: JObject,
 ) {
     let result: anyhow::Result<()> = try {
         let network_dest = env.get_string(&network_dest)?.to_str()?.to_string();
-        let dirs_length = env.get_array_length(&dirs_jobj)?;
-        let mut dirs = Vec::new();
-        for i in 0..dirs_length {
-            let s: JString = env.get_object_array_element(&dirs_jobj, i)?.into();
-            dirs.push(env.get_string(&s)?.to_str()?.to_string());
-        }
+        let dir = env.get_string(&dir)?.to_str()?.to_string();
 
-        for x in dirs {
-            for x in fs::read_dir(&x)? {
-                let jstr = env.new_string(format!("{:?}", x))?;
+        let socket_addr = network_dest.parse::<SocketAddr>()?;
+
+        send(&dir, socket_addr, |msg| {
+            let result: anyhow::Result<()> = try {
+                let js = env.new_string(msg)?;
                 env.call_method(
                     &callback,
                     "call",
                     "(Ljava/lang/String;)V",
-                    &[JValueGen::Object(&jstr.into())],
+                    &[JValue::Object(&js.into())],
                 )?;
+            };
+            if let Err(e) = result {
+                // let's just assert callback calls won't fail
+                panic!("Callback error: {}", e);
             }
-        }
+        })?;
     };
     if let Err(e) = result {
         env.throw(format!("Err: {}", e)).unwrap();
     }
+}
+
+fn send<F>(dir: &str, socket_addr: SocketAddr, mut log_callback: F) -> anyhow::Result<()>
+where
+    F: FnMut(&str),
+{
+    let mut socket = TcpStream::connect(socket_addr)?;
+    socket.write_all(STREAM_MAGIC)?;
+
+    macro_rules! check_response {
+        () => {
+            let message = socket.read_u8()?;
+            if message != Message::Finish as u8 {
+                Err(anyhow!("Unexpected incoming response: {}", message))?;
+            }
+        };
+    }
+    check_response!();
+    log_callback("Indexing...");
+
+    let entries = index_dir(dir)?;
+    let mut buf = Cursor::new(Vec::new());
+    bincode_serialize_compress(&mut buf, entries)?;
+
+    log_callback("Sending list file...");
+    socket.write_u32::<LE>(buf.get_ref().len() as u32)?;
+    io::copy(&mut buf.into_inner().as_slice(), &mut socket)?;
+    check_response!();
+
+    let send_list_length = socket.read_u32::<LE>()?;
+    let mut buf = Cursor::new(Vec::new());
+    io::copy(
+        &mut Read::by_ref(&mut socket).take(send_list_length as u64),
+        &mut buf,
+    )?;
+    let send_list: Vec<Vec<u8>> = bincode_deserialize_compress(&mut buf.into_inner().as_slice())?;
+    socket.write_u8(Message::Finish as u8)?;
+
+    let mut stream = Stream::new(&mut socket);
+    write_send_list_to_stream(&mut stream, dir, &send_list)?;
+    drop(stream);
+
+    socket.write_u8(Message::Eof as u8)?;
+    check_response!();
+
+    drop(socket);
+
+    Ok(())
 }
 
 const WORD_JOINER: char = unsafe { char::from_u32_unchecked(0x2060) };
