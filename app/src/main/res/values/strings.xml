@@ -15,4 +15,8 @@
     <string name="network_destination_hint">网络目标</string>
     <string name="sync_directories_title">同步目录</string>
     <string name="button_add">添加</string>
+    <string name="hint_dir_path">目录路径</string>
+    <string name="title_dialog_add_path">添加路径</string>
+    <string name="button_cancel">取消</string>
+    <string name="button_confirm">确认</string>
 </resources>
