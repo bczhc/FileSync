@@ -21,6 +21,16 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".ConfigActivity"
+            android:exported="true"
+            android:label="@string/label_config"
+            android:theme="@style/Theme.FileSync">
+            <intent-filter>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>

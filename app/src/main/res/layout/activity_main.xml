@@ -1,9 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
-
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+    android:orientation="vertical"
+    android:padding="5dp">
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/sync_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:text="@string/button_sync"/>
+    <EditText
+        android:id="@+id/log_et"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginBottom="5dp"
+        android:background="@android:color/transparent"
+        android:cursorVisible="false"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
+        android:gravity="top|start"
+        android:inputType="none"
+        tools:ignore="Autofill,LabelFor,TextFields"
+        tools:text="Log...\nLog..."/>
+</LinearLayout>

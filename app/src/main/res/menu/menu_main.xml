@@ -1,5 +1,7 @@
-<menu xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools" tools:context="pers.zhc.android.filesync.MainActivity">
-    <item android:id="@+id/action_settings" android:orderInCategory="100" android:title="@string/action_settings"
-        app:showAsAction="never" />
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/config"
+        android:title="@string/menu_config"
+        app:showAsAction="ifRoom"/>
 </menu>

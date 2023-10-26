@@ -9,4 +9,7 @@
 
     <string name="hello_first_fragment">Hello first fragment</string>
     <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
+    <string name="menu_config">配置</string>
+    <string name="button_sync">同步</string>
+    <string name="label_config">配置</string>
 </resources>
