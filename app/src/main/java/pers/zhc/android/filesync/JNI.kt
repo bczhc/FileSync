@@ -5,6 +5,10 @@ object JNI {
         System.loadLibrary("jni_lib")
     }
 
+    interface Callback {
+        fun call(path: String)
+    }
+
     @JvmStatic
-    external fun test(): Int
+    external fun send(networkDest: String, dirs: Array<String>, callback: Callback)
 }

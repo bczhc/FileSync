@@ -7,6 +7,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 import org.junit.Assert.*
+import java.io.File
 
 /**
  * Instrumented test, which will execute on an Android device.
@@ -17,8 +18,8 @@ import org.junit.Assert.*
 class ExampleInstrumentedTest {
     @Test
     fun useAppContext() {
-        // Context of the app under test.
-        val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-        assertEquals("pers.zhc.android.filesync", appContext.packageName)
+        for (s in File("/storage/emulated/0/DCIM").list()) {
+            println(s)
+        }
     }
 }

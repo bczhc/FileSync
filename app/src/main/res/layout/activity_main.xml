@@ -12,17 +12,23 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
         android:text="@string/button_sync"/>
-    <EditText
-        android:id="@+id/log_et"
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginBottom="5dp"
-        android:background="@android:color/transparent"
-        android:cursorVisible="false"
-        android:focusable="false"
-        android:focusableInTouchMode="false"
-        android:gravity="top|start"
-        android:inputType="none"
-        tools:ignore="Autofill,LabelFor,TextFields"
-        tools:text="Log...\nLog..."/>
+        android:layout_height="match_parent">
+        <EditText
+            android:id="@+id/log_et"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="5dp"
+            android:background="@android:color/transparent"
+            android:cursorVisible="false"
+            android:focusable="false"
+            android:focusableInTouchMode="false"
+            android:gravity="top|start"
+            android:inputType="none"
+            tools:ignore="Autofill,LabelFor,TextFields"
+            style="@style/TextAppearance.Material3.BodySmall"
+            android:fontFamily="monospace"
+            tools:text="Log...\nLog..."/>
+    </ScrollView>
 </LinearLayout>

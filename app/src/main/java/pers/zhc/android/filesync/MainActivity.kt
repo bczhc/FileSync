@@ -26,8 +26,22 @@ class MainActivity : AppCompatActivity() {
         requestPermissionLauncher.launch(android.Manifest.permission.READ_EXTERNAL_STORAGE)
         requestPermissionLauncher.launch(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
 
-        bindings.syncBtn.setOnClickListener {
+        val logET = bindings.logEt
+        val appendLog = { line: String ->
+            logET.append(line)
+            logET.append("\n")
+        }
 
+        bindings.syncBtn.setOnClickListener {
+            logET.text.clear()
+
+            JNI.send(ConfigManager.savedNetworkDestination,
+                ConfigManager.savedDirPaths.map { it.path.path }.toTypedArray(),
+                object : JNI.Callback {
+                    override fun call(path: String) {
+                        appendLog(path)
+                    }
+                })
         }
     }
 
