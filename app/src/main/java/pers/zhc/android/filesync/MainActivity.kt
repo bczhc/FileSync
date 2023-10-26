@@ -11,8 +11,9 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val bindings = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(bindings.root)
+        val bindings = ActivityMainBinding.inflate(layoutInflater).also {
+            setContentView(it.root)
+        }
 
         bindings.syncBtn.setOnClickListener {
 
