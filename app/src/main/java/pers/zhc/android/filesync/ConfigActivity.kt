@@ -23,6 +23,12 @@ class ConfigActivity : AppCompatActivity() {
 
         val syncDirs = mutableListOf<SyncDir>()
 
+        syncDirs.addAll(ConfigManager.savedDirPaths)
+
+        val saveSyncDirs = {
+            ConfigManager.savedDirPaths = syncDirs
+        }
+
         val listAdapter = ListAdapter(syncDirs, onLongClick = { self, view, position ->
             PopupMenu(this, view).apply {
                 inflate(R.menu.popup_menu_delete)
@@ -30,6 +36,7 @@ class ConfigActivity : AppCompatActivity() {
                     if (it.itemId != R.id.delete) return@setOnMenuItemClickListener false
                     self.notifyItemRemoved(position)
                     syncDirs.removeAt(position)
+                    saveSyncDirs()
                     true
                 }
             }.show()
@@ -50,6 +57,7 @@ class ConfigActivity : AppCompatActivity() {
                     val path = viewBindings.editText.text.toString()
                     syncDirs += SyncDir(File(path))
                     listAdapter.notifyItemInserted(syncDirs.size)
+                    saveSyncDirs()
                 }
                 .show()
         }
