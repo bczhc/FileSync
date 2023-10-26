@@ -1,9 +1,15 @@
 @file:Suppress("UnstableApiUsage")
 
+import pers.zhc.gradle.plugins.ndk.rust.RustBuildPlugin
+import pers.zhc.gradle.plugins.ndk.rust.RustBuildPlugin.RustBuildPluginExtension
+import java.util.*
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
 }
+
+apply<RustBuildPlugin>()
 
 android {
     namespace = "pers.zhc.android.filesync"
@@ -35,7 +41,44 @@ android {
     buildFeatures {
         viewBinding = true
     }
+
+    sourceSets {
+        val sets = asMap
+        sets["main"]!!.apply {
+            jniLibs.srcDirs("jniLibs")
+        }
+    }
 }
+
+val configFile = File(rootProject.projectDir, "config.properties")
+if (!configFile.exists()) {
+    throw GradleException("config.properties not exists")
+}
+val configs = Properties().apply {
+    load(configFile.reader())
+}
+val ndkBuildType = configs["ndk.buildType"] as String? ?: "debug"
+val ndkTargets = (configs["ndk.target"] ?: throw GradleException("ndk.target missing")) as String
+val ndkTargetsConfig = ndkTargets.split(',').map {
+    val groupValues = Regex("^(.*)-([0-9]+)\$").findAll(it).first().groupValues
+    mapOf(
+        Pair("abi", groupValues[1]),
+        Pair("api", groupValues[2].toInt())
+    )
+}
+
+val jniOutputDir = file("jniLibs").also { it.mkdir() }
+
+configure<RustBuildPluginExtension> {
+    srcDir.set("$projectDir/src/main/rust")
+    ndkDir.set(android.ndkDirectory.path)
+    targets.set(ndkTargetsConfig)
+    buildType.set(ndkBuildType)
+    outputDir.set(jniOutputDir.path)
+}
+
+val compileRustTask = tasks.findByName(RustBuildPlugin.TASK_NAME())!!
+project.tasks.getByName("preBuild").dependsOn(compileRustTask)
 
 dependencies {
     implementation("androidx.core:core-ktx:1.12.0")

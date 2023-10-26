@@ -1,5 +1,6 @@
 buildscript {
     dependencies {
+        classpath("com.github.bczhc:android-native-build-plugin:c546ada670")
     }
 }
 
