@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
 import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.PopupMenu
@@ -30,11 +31,33 @@ class ConfigActivity : AppCompatActivity() {
 
         val listAdapter = ListAdapter(syncDirs, onLongClick = { self, view, position ->
             PopupMenu(this, view).apply {
-                inflate(R.menu.popup_menu_delete)
+                inflate(R.menu.popup_menu_sync_dir_item)
                 setOnMenuItemClickListener {
-                    if (it.itemId != R.id.delete) return@setOnMenuItemClickListener false
-                    self.notifyItemRemoved(position)
-                    syncDirs.removeAt(position)
+                    when (it.itemId) {
+                        R.id.delete -> {
+                            self.notifyItemRemoved(position)
+                            syncDirs.removeAt(position)
+                        }
+
+                        R.id.edit -> {
+                            val editText = EditText(this@ConfigActivity).apply {
+                                setText(syncDirs[position].path.path)
+                            }
+                            MaterialAlertDialogBuilder(this@ConfigActivity)
+                                .setTitle(R.string.title_dialog_edit_path)
+                                .setView(editText)
+                                .setNegativeButton(R.string.button_cancel, null)
+                                .setPositiveButton(R.string.button_confirm) { _, _ ->
+                                    syncDirs[position] = SyncDir(File(editText.text.toString()))
+                                    self.notifyItemChanged(position)
+                                }
+                                .show()
+                        }
+
+                        else -> {
+                            return@setOnMenuItemClickListener false
+                        }
+                    }
                     true
                 }
             }.show()
