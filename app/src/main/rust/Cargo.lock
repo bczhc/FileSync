@@ -5,6 +5,7 @@ version = 3
 [[package]]
 name = "adb-sync"
 version = "0.1.0"
+source = "git+https://github.com/bczhc/adb-sync?rev=cdff46bb8cfcc45429d46fed8d7cf66ed2a3c3dc#cdff46bb8cfcc45429d46fed8d7cf66ed2a3c3dc"
 dependencies = [
  "anyhow",
  "bincode",
