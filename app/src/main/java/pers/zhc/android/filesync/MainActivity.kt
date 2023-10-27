@@ -2,7 +2,6 @@ package pers.zhc.android.filesync
 
 import android.content.Intent
 import android.os.Bundle
-import android.os.Looper
 import android.view.Menu
 import android.view.MenuItem
 import androidx.activity.result.contract.ActivityResultContracts
@@ -24,12 +23,13 @@ class MainActivity : AppCompatActivity() {
         val bindings = ActivityMainBinding.inflate(layoutInflater).also {
             setContentView(it.root)
         }
+        val syncBtn = bindings.syncBtn
+        val logET = bindings.logEt
 
         requestPermissionLauncher.launch(android.Manifest.permission.INTERNET)
         requestPermissionLauncher.launch(android.Manifest.permission.READ_EXTERNAL_STORAGE)
         requestPermissionLauncher.launch(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
 
-        val logET = bindings.logEt
         val appendLog = { line: String ->
             checkedRunOnUiThread {
                 logET.append(JNI.joinWordJoiner(line))
@@ -38,11 +38,12 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        bindings.syncBtn.setOnClickListener {
+        syncBtn.setOnClickListener {
+            syncBtn.isEnabled = false
             logET.text.clear()
-
             thread {
                 for (dir in ConfigManager.savedDirPaths) {
+                    appendLog("Syncing directory: ${dir.path.path}...")
                     runCatching {
                         JNI.send(ConfigManager.savedNetworkDestination,
                             dir.path.path,
@@ -54,6 +55,10 @@ class MainActivity : AppCompatActivity() {
                     }.onFailure {
                         appendLog("Error: $it")
                     }
+                    appendLog("")
+                }
+                runOnUiThread {
+                    syncBtn.isEnabled = true
                 }
             }
         }
