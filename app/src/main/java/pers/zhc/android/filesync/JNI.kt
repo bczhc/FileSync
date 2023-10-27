@@ -3,7 +3,11 @@ package pers.zhc.android.filesync
 object JNI {
     init {
         System.loadLibrary("jni_lib")
+        initJni()
     }
+
+    @JvmStatic
+    external fun initJni()
 
     interface Callback {
         fun message(message: String)

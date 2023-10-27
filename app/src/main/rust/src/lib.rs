@@ -1,11 +1,13 @@
 #![feature(try_blocks)]
 #![feature(const_char_from_u32_unchecked)]
 
-use std::io;
 use std::io::{Cursor, Read, Write};
 use std::net::{SocketAddr, TcpStream};
 use std::ptr::null_mut;
+use std::sync::Mutex;
+use std::{io, panic};
 
+use crate::helper::jni_log;
 use adb_sync::transfer::tcp::{Message, STREAM_MAGIC};
 use adb_sync::transfer::{write_send_list_to_stream, Stream};
 use adb_sync::{bincode_deserialize_compress, bincode_serialize_compress, index_dir};
@@ -13,7 +15,10 @@ use anyhow::anyhow;
 use byteorder::{ReadBytesExt, WriteBytesExt, LE};
 use jni::objects::{JClass, JObject, JString, JValue};
 use jni::sys::{jobject, jstring};
-use jni::JNIEnv;
+use jni::{JNIEnv, JavaVM};
+use once_cell::sync::Lazy;
+
+mod helper;
 
 #[no_mangle]
 #[allow(non_snake_case)]
@@ -161,4 +166,22 @@ pub extern "system" fn Java_pers_zhc_android_filesync_JNI_joinWordJoiner(
             jobject::from(null_mut())
         }
     }
+}
+
+static JAVA_VM: Lazy<Mutex<Option<JavaVM>>> = Lazy::new(|| Mutex::new(None));
+
+#[no_mangle]
+#[allow(non_snake_case)]
+pub extern "system" fn Java_pers_zhc_android_filesync_JNI_initJni(env: JNIEnv, _: JClass) {
+    let jvm = env.get_java_vm().unwrap();
+    JAVA_VM.lock().unwrap().replace(jvm);
+    panic::set_hook(Box::new(|x| {
+        let info = format!("{}", x);
+        let guard = JAVA_VM.lock().unwrap();
+        let jvm = guard.as_ref().unwrap();
+        let mut env = jvm.attach_current_thread().unwrap();
+        let err_text = format!("Rust panic!!\n{}", info);
+        jni_log(&mut env, &err_text).unwrap();
+        let _ = env.throw(err_text);
+    }));
 }
