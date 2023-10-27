@@ -5,6 +5,8 @@ use jni::objects::JValue;
 use jni::sys::jobject;
 use jni::JNIEnv;
 
+use crate::JAVA_VM;
+
 pub trait CheckOrThrow {
     fn check_or_throw(&self, env: &mut JNIEnv) -> jni::errors::Result<()>;
 }
@@ -41,6 +43,9 @@ pub fn log(env: &mut JNIEnv, tag: &str, msg: &str) -> jni::errors::Result<()> {
     Ok(())
 }
 
-pub fn jni_log(env: &mut JNIEnv, msg: &str) -> jni::errors::Result<()> {
-    log(env, JNI_LOG_TAG, msg)
+pub fn jni_log(msg: &str) -> jni::errors::Result<()> {
+    let guard = JAVA_VM.lock().unwrap();
+    let jvm = guard.as_ref().unwrap();
+    let mut env = jvm.attach_current_thread()?;
+    log(&mut env, JNI_LOG_TAG, msg)
 }

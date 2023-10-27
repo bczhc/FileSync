@@ -181,7 +181,7 @@ pub extern "system" fn Java_pers_zhc_android_filesync_JNI_initJni(env: JNIEnv, _
         let jvm = guard.as_ref().unwrap();
         let mut env = jvm.attach_current_thread().unwrap();
         let err_text = format!("Rust panic!!\n{}", info);
-        jni_log(&mut env, &err_text).unwrap();
+        jni_log(&err_text).unwrap();
         let _ = env.throw(err_text);
     }));
 }
