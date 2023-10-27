@@ -24,4 +24,5 @@
     <string name="error_occurred_dialog_title">有错误发生！</string>
     <string name="menu_edit">修改</string>
     <string name="title_dialog_edit_path">修改路径</string>
+    <string name="task_running_toast">任务正在进行中</string>
 </resources>

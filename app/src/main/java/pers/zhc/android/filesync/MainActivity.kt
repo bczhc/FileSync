@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import androidx.activity.addCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -85,6 +86,14 @@ class MainActivity : AppCompatActivity() {
                             }.show()
                     }
                 }
+            }
+        }
+
+        onBackPressedDispatcher.addCallback {
+            if (!syncBtn.isEnabled) {
+                ToastUtils.show(this@MainActivity, R.string.task_running_toast)
+            } else {
+                finish()
             }
         }
     }
