@@ -21,4 +21,5 @@
     <string name="button_confirm">确认</string>
     <string name="menu_delete">删除</string>
     <string name="permission_denied_toast">请同意权限</string>
+    <string name="error_occurred_dialog_title">有错误发生！</string>
 </resources>

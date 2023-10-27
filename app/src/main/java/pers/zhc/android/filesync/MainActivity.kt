@@ -6,6 +6,7 @@ import android.view.Menu
 import android.view.MenuItem
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import pers.zhc.android.filesync.databinding.ActivityMainBinding
 import pers.zhc.android.filesync.utils.checkedRunOnUiThread
 import kotlin.concurrent.thread
@@ -42,6 +43,7 @@ class MainActivity : AppCompatActivity() {
             syncBtn.isEnabled = false
             logET.text.clear()
             thread {
+                val errorMsg = StringBuilder()
                 for (dir in ConfigManager.savedDirPaths) {
                     appendLog("Syncing directory: ${dir.path.path}...")
                     runCatching {
@@ -54,11 +56,22 @@ class MainActivity : AppCompatActivity() {
                             })
                     }.onFailure {
                         appendLog("Error: $it")
+                        errorMsg.appendLine(it)
                     }
                     appendLog("")
                 }
                 runOnUiThread {
                     syncBtn.isEnabled = true
+                    if (errorMsg.isNotEmpty()) {
+                        MaterialAlertDialogBuilder(this)
+                            .setTitle(R.string.error_occurred_dialog_title)
+                            .setMessage(errorMsg.toString())
+                            .setPositiveButton(R.string.button_confirm, null)
+                            .create().apply {
+                                setCanceledOnTouchOutside(false)
+                                setCancelable(false)
+                            }.show()
+                    }
                 }
             }
         }
