@@ -6,7 +6,9 @@ object JNI {
     }
 
     interface Callback {
-        fun call(path: String)
+        fun message(message: String)
+
+        fun progress(path: String, n: Int, total: Int)
     }
 
     @JvmStatic

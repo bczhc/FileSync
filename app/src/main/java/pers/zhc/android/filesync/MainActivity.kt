@@ -55,8 +55,15 @@ class MainActivity : AppCompatActivity() {
                         JNI.send(ConfigManager.savedNetworkDestination,
                             dir.path.path,
                             object : JNI.Callback {
-                                override fun call(path: String) {
-                                    appendLog(path)
+                                override fun message(message: String) {
+                                    appendLog(message)
+                                }
+
+                                override fun progress(path: String, n: Int, total: Int) {
+                                    if (n % (total / 100) == 0) {
+                                        // slow log mode; divide the total outputs into just 100
+                                        appendLog("Sending progress: [$n/$total], file: $path")
+                                    }
                                 }
                             })
                     }.onFailure {

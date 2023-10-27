@@ -32,13 +32,30 @@ pub extern "system" fn Java_pers_zhc_android_filesync_JNI_send(
 
         send(&dir, socket_addr, |msg| {
             let result: anyhow::Result<()> = try {
-                let js = env.new_string(msg)?;
-                env.call_method(
-                    &callback,
-                    "call",
-                    "(Ljava/lang/String;)V",
-                    &[JValue::Object(&js.into())],
-                )?;
+                match msg {
+                    CallbackType::Message(msg) => {
+                        let js = env.new_string(msg)?;
+                        env.call_method(
+                            &callback,
+                            "message",
+                            "(Ljava/lang/String;)V",
+                            &[JValue::Object(&js.into())],
+                        )?;
+                    }
+                    CallbackType::Progress(path, n, total) => {
+                        let js = env.new_string(path)?;
+                        env.call_method(
+                            &callback,
+                            "progress",
+                            "(Ljava/lang/String;II)V",
+                            &[
+                                JValue::Object(&js.into()),
+                                JValue::Int(n.try_into()?),
+                                JValue::Int(total.try_into()?),
+                            ],
+                        )?;
+                    }
+                }
             };
             if let Err(e) = result {
                 // let's just assert callback calls won't fail
@@ -51,10 +68,21 @@ pub extern "system" fn Java_pers_zhc_android_filesync_JNI_send(
     }
 }
 
+enum CallbackType<'a> {
+    Message(&'a str),
+    Progress(&'a str, usize, usize),
+}
+
 fn send<F>(dir: &str, socket_addr: SocketAddr, mut log_callback: F) -> anyhow::Result<()>
 where
-    F: FnMut(&str),
+    F: FnMut(CallbackType),
 {
+    macro_rules! log_msg {
+        ($msg:expr) => {
+            log_callback(CallbackType::Message($msg))
+        };
+    }
+
     let mut socket = TcpStream::connect(socket_addr)?;
     socket.write_all(STREAM_MAGIC)?;
 
@@ -67,13 +95,13 @@ where
         };
     }
     check_response!();
-    log_callback("Indexing...");
+    log_msg!("Indexing...");
 
     let entries = index_dir(dir, false)?;
     let mut buf = Cursor::new(Vec::new());
     bincode_serialize_compress(&mut buf, entries)?;
 
-    log_callback("Sending list file...");
+    log_msg!("Sending list file...");
     socket.write_u32::<LE>(buf.get_ref().len() as u32)?;
     io::copy(&mut buf.into_inner().as_slice(), &mut socket)?;
     check_response!();
@@ -87,10 +115,14 @@ where
     let send_list: Vec<Vec<u8>> = bincode_deserialize_compress(&mut buf.into_inner().as_slice())?;
     socket.write_u8(Message::Finish as u8)?;
 
-    log_callback("Sending stream...");
+    log_msg!("Sending stream...");
     let mut stream = Stream::new(&mut socket);
-    write_send_list_to_stream(&mut stream, dir, &send_list, |p| {
-        log_callback(format!("{}", p.display()).as_str());
+    write_send_list_to_stream(&mut stream, dir, &send_list, |p, (n, total)| {
+        log_callback(CallbackType::Progress(
+            format!("{}", p.display()).as_str(),
+            n,
+            total,
+        ))
     })?;
     drop(stream);
 
@@ -99,7 +131,7 @@ where
 
     drop(socket);
 
-    log_callback("Done!");
+    log_msg!("Done!");
 
     Ok(())
 }
