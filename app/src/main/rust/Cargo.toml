@@ -11,8 +11,9 @@ jni = "0.21.1"
 anyhow = "1.0.75"
 byteorder = "1.5.0"
 once_cell = "1.18.0"
+bincode = { version = "2.0.0-rc.3", features = ["bincode_derive", "derive"] }
 #adb-sync = { path = "/home/bczhc/code/adb-sync" }
-adb-sync = { git = "https://github.com/bczhc/adb-sync", rev = "cdff46bb8cfcc45429d46fed8d7cf66ed2a3c3dc" }
+adb-sync = { git = "https://github.com/bczhc/adb-sync", rev = "1ea437f96d8eabdb94de188cd9a62defc7d81c9c" }
 
 [profile.release]
 panic = "abort"

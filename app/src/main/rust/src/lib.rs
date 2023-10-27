@@ -3,15 +3,17 @@
 
 use std::io::{Cursor, Read, Write};
 use std::net::{SocketAddr, TcpStream};
+use std::path::Path;
 use std::ptr::null_mut;
 use std::sync::Mutex;
 use std::{io, panic};
 
 use crate::helper::jni_log;
-use adb_sync::transfer::tcp::{Message, STREAM_MAGIC};
+use adb_sync::transfer::tcp::{Message, SendConfigs, STREAM_MAGIC};
 use adb_sync::transfer::{write_send_list_to_stream, Stream};
 use adb_sync::{bincode_deserialize_compress, bincode_serialize_compress, index_dir};
 use anyhow::anyhow;
+use bincode::Encode;
 use byteorder::{ReadBytesExt, WriteBytesExt, LE};
 use jni::objects::{JClass, JObject, JString, JValue};
 use jni::sys::{jobject, jstring};
@@ -103,12 +105,19 @@ where
     log_msg!("Indexing...");
 
     let entries = index_dir(dir, false)?;
-    let mut buf = Cursor::new(Vec::new());
-    bincode_serialize_compress(&mut buf, entries)?;
 
     log_msg!("Sending list file...");
-    socket.write_u32::<LE>(buf.get_ref().len() as u32)?;
-    io::copy(&mut buf.into_inner().as_slice(), &mut socket)?;
+    send_serializable(&mut socket, &entries)?;
+    check_response!();
+
+    let dir_basename = Path::new(dir).file_name().map(|x| {
+        // TODO: non-UTF8 names
+        String::from(x.to_str().unwrap())
+    });
+    let send_configs = SendConfigs {
+        src_basename: dir_basename,
+    };
+    send_serializable(&mut socket, &send_configs)?;
     check_response!();
 
     let send_list_length = socket.read_u32::<LE>()?;
@@ -138,6 +147,18 @@ where
 
     log_msg!("Done!");
 
+    Ok(())
+}
+
+fn send_serializable<W, E>(mut writer: W, obj: &E) -> anyhow::Result<()>
+where
+    W: Write,
+    E: Encode,
+{
+    let mut buf = Cursor::new(Vec::new());
+    bincode_serialize_compress(&mut buf, obj)?;
+    writer.write_u32::<LE>(buf.get_ref().len() as u32)?;
+    io::copy(&mut buf.into_inner().as_slice(), &mut writer)?;
     Ok(())
 }
 
