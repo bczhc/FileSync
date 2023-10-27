@@ -69,7 +69,7 @@ where
     check_response!();
     log_callback("Indexing...");
 
-    let entries = index_dir(dir)?;
+    let entries = index_dir(dir, false)?;
     let mut buf = Cursor::new(Vec::new());
     bincode_serialize_compress(&mut buf, entries)?;
 
