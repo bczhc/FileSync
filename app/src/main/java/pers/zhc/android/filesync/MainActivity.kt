@@ -12,6 +12,7 @@ import pers.zhc.android.filesync.databinding.ActivityMainBinding
 import pers.zhc.android.filesync.utils.SpinLatch
 import pers.zhc.android.filesync.utils.checkedRunOnUiThread
 import kotlin.concurrent.thread
+import kotlin.math.max
 
 class MainActivity : AppCompatActivity() {
     private val requestPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) {
@@ -65,7 +66,7 @@ class MainActivity : AppCompatActivity() {
                                 }
 
                                 override fun progress(path: String, n: Int, total: Int) {
-                                    if (n % (total / 100) == 0) {
+                                    if (n % max((total / 100), 1) == 0) {
                                         // slow log mode; divide the total outputs into just 100
                                         appendLog("Sending progress: [$n/$total], file: $path")
                                     }
