@@ -8,6 +8,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import pers.zhc.android.filesync.databinding.ActivityMainBinding
+import pers.zhc.android.filesync.utils.SpinLatch
 import pers.zhc.android.filesync.utils.checkedRunOnUiThread
 import kotlin.concurrent.thread
 
@@ -31,12 +32,16 @@ class MainActivity : AppCompatActivity() {
         requestPermissionLauncher.launch(android.Manifest.permission.READ_EXTERNAL_STORAGE)
         requestPermissionLauncher.launch(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
 
+        val uiFinishedLatch = SpinLatch()
         val appendLog = { line: String ->
+            uiFinishedLatch.prepare()
             checkedRunOnUiThread {
                 logET.append(JNI.joinWordJoiner(line))
                 logET.append("\n")
                 bindings.scrollView.scrollTo(0, logET.bottom + 1)
+                uiFinishedLatch.stop()
             }
+            uiFinishedLatch.await()
         }
 
         syncBtn.setOnClickListener {
