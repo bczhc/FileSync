@@ -2,11 +2,14 @@ package pers.zhc.android.filesync
 
 import android.content.Intent
 import android.os.Bundle
+import android.os.Looper
 import android.view.Menu
 import android.view.MenuItem
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import pers.zhc.android.filesync.databinding.ActivityMainBinding
+import pers.zhc.android.filesync.utils.checkedRunOnUiThread
+import kotlin.concurrent.thread
 
 class MainActivity : AppCompatActivity() {
     private val requestPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) {
@@ -28,21 +31,30 @@ class MainActivity : AppCompatActivity() {
 
         val logET = bindings.logEt
         val appendLog = { line: String ->
-            logET.append(JNI.joinWordJoiner(line))
-            logET.append("\n")
+            checkedRunOnUiThread {
+                logET.append(JNI.joinWordJoiner(line))
+                logET.append("\n")
+                bindings.scrollView.scrollTo(0, logET.bottom + 1)
+            }
         }
 
         bindings.syncBtn.setOnClickListener {
             logET.text.clear()
 
-            for (dir in ConfigManager.savedDirPaths) {
-                JNI.send(ConfigManager.savedNetworkDestination,
-                    dir.path.path,
-                    object : JNI.Callback {
-                        override fun call(path: String) {
-                            appendLog(path)
-                        }
-                    })
+            thread {
+                for (dir in ConfigManager.savedDirPaths) {
+                    runCatching {
+                        JNI.send(ConfigManager.savedNetworkDestination,
+                            dir.path.path,
+                            object : JNI.Callback {
+                                override fun call(path: String) {
+                                    appendLog(path)
+                                }
+                            })
+                    }.onFailure {
+                        appendLog("Error: $it")
+                    }
+                }
             }
         }
     }

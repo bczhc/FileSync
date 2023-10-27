@@ -87,14 +87,19 @@ where
     let send_list: Vec<Vec<u8>> = bincode_deserialize_compress(&mut buf.into_inner().as_slice())?;
     socket.write_u8(Message::Finish as u8)?;
 
+    log_callback("Sending stream...");
     let mut stream = Stream::new(&mut socket);
-    write_send_list_to_stream(&mut stream, dir, &send_list)?;
+    write_send_list_to_stream(&mut stream, dir, &send_list, |p| {
+        log_callback(format!("{}", p.display()).as_str());
+    })?;
     drop(stream);
 
     socket.write_u8(Message::Eof as u8)?;
     check_response!();
 
     drop(socket);
+
+    log_callback("Done!");
 
     Ok(())
 }
