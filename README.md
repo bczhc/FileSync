@@ -1,7 +1,9 @@
 FileSync
 ---
 
-Sync files from Android to another host over network.
+Incrementally send files from Android to another host over network.
+
+I use this to back up Android files periodically.
 
 ## Build
 An example for arm64 Android devices:
