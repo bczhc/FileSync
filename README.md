@@ -1,7 +1,7 @@
 FileSync
 ---
 
-Sync files from Android to another host through the network.
+Sync files from Android to another host over network.
 
 ## Build
 An example for arm64 Android devices:
