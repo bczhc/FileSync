@@ -48,7 +48,7 @@ class ConfigActivity : AppCompatActivity() {
                                 .setView(editText)
                                 .setNegativeButton(R.string.button_cancel, null)
                                 .setPositiveButton(R.string.button_confirm) { _, _ ->
-                                    syncDirs[position] = SyncDir(File(editText.text.toString()))
+                                    syncDirs[position].path = File(editText.text.toString())
                                     self.notifyItemChanged(position)
                                 }
                                 .show()
@@ -95,6 +95,7 @@ class ConfigActivity : AppCompatActivity() {
     ) : RecyclerView.Adapter<ListAdapter.ViewHolder>() {
         class ViewHolder(bindings: ListItemDirectoryBinding) : RecyclerView.ViewHolder(bindings.root) {
             val textView = bindings.textView
+            val checkBox = bindings.enabledCb
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -103,10 +104,16 @@ class ConfigActivity : AppCompatActivity() {
         }
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-            holder.textView.text = data[position].path.path
+            val syncDir = data[position]
+            holder.textView.text = syncDir.path.path
+            holder.checkBox.isChecked = syncDir.enabled
+
             holder.textView.setOnLongClickListener {
                 onLongClick(this, holder.textView, holder.layoutPosition)
                 true
+            }
+            holder.checkBox.setOnCheckedChangeListener { _, isChecked ->
+                data[holder.layoutPosition].enabled = isChecked
             }
         }
 

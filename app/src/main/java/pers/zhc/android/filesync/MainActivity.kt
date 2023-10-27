@@ -51,6 +51,10 @@ class MainActivity : AppCompatActivity() {
             thread {
                 val errorMsg = StringBuilder()
                 for (dir in ConfigManager.savedDirPaths) {
+                    if (!dir.enabled) {
+                        appendLog("Skip disabled directory: ${dir.path.path}")
+                        continue
+                    }
                     appendLog("Syncing directory: ${dir.path.path}...")
                     runCatching {
                         JNI.send(ConfigManager.savedNetworkDestination,
