@@ -25,10 +25,37 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        asMap["debug"]!!.apply {
+            storeFile = file("test.jks")
+            storePassword = "123456"
+            keyAlias = "key0"
+            keyPassword = "123456"
+        }
+    }
+
     buildTypes {
         named("release") {
             isMinifyEnabled = false
             setProguardFiles(listOf(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"))
+        }
+    }
+    buildTypes {
+        val types = asMap
+        types["debug"]!!.apply {
+            isMinifyEnabled = false
+            isShrinkResources = false
+            isDebuggable = true
+            isJniDebuggable = true
+            signingConfig = signingConfigs["debug"]
+        }
+        types["release"]!!.apply {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles("proguard-rules.pro")
+            isDebuggable = true
+            isJniDebuggable = true
+            signingConfig = signingConfigs["debug"]
         }
     }
     compileOptions {
